@@ -1,29 +1,11 @@
 from tkinter import *
-# from PIL import ImageTk, Image
-
-from tkinter import ttk
 from tkinter.messagebox import showerror, showwarning, showinfo
-import Crypto
+from cryptography.fernet import Fernet
+import base64
 
 window = Tk()
 window.title("Sectert notes")
 window.minsize(width=400, height=750)
-
-# Input string to be encrypted (padding to adjust length)
-input_string = "Hello World!".rjust(32)
-# Secret key (pw)
-key = b'1234567890123456'
-# Encrypt the string
-cipher = Crypto.Cipher.AES.new(key)
-encrypted_string = cipher.encrypt(input_string.encode())
-# Decrypt the encrypted string
-decrypted_string = cipher.decrypt(encrypted_string)
-# Print the original and decrypted strings
-print("Original String:", input_string)
-print("Decrypted String:", decrypted_string.decode())
-
-
-
 
 title_text = Label(text="Enter your title", font=('Arial', 16, "normal"))
 title_text.config(padx=20, pady=20)
@@ -55,20 +37,35 @@ def save_encrypt():
 
     if (textarea.strip() == "" or title.strip() == "" or key_info.strip() == ""):
         showwarning(title="Error", message="Please enter all information")
-
-
-    my_file = open("Secret note.txt", "a+")
-    my_file.write(title)
-    my_file.write('\n')
-    my_file.write(textarea)
-    my_file.write('\n')
-    my_file.close()
-    print('done')
+    else:
+        text_decrypt = str(encryptText(textarea))
+        my_file = open("Secret note.txt", "a+")
+        my_file.write(title)
+        my_file.write('\n')
+        my_file.write(text_decrypt)
+        my_file.write('\n')
+        my_file.close()
 
 
 def decrypt():
-    textarea = secret_enter.get("1.0", END)
+    message = secret_enter.get("1.0", END)
+    key = b'my_key_here'
+    if len(key) < 32:
+        key = key + b'=' * (32 - len(key))
 
+    encoded_key = base64.urlsafe_b64encode(key)
+    fernet = Fernet(encoded_key)
+    decrypted_message = fernet.decrypt(message.encode()).decode()
+    print(decrypted_message)
+
+def encryptText(message):
+    key = b'my_key_here'
+    if len(key) < 32:
+        key = key + b'=' * (32 - len(key))
+
+    encoded_key = base64.urlsafe_b64encode(key)
+    fernet = Fernet(encoded_key)
+    return fernet.encrypt(message.encode())
 
 
 save_button = Button(text="Save & Encrypt", command=save_encrypt)
